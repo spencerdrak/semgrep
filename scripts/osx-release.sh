@@ -6,9 +6,10 @@ brew install opam pkg-config coreutils
 opam init --no-setup --bare;
 #coupling: this should be the same version than in our Dockerfile
 opam switch create 4.14.0
-ocamlc -where
 opam switch 4.14.0;
 eval "$(opam env)"
+which ocamlc
+file "$(which ocamlc)"
 git submodule update --init --recursive --depth 1
 
 
