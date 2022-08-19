@@ -6,12 +6,12 @@ brew install opam pkg-config coreutils
 opam init --no-setup --bare;
 #coupling: this should be the same version than in our Dockerfile
 opam switch create 4.14.0 || true;
+opam switch 4.14.0;
+eval "$(opam env)"
 which ocamlc
 file "$(which ocamlc)"
-opam switch 4.14.0;
 git submodule update --init --recursive --depth 1
 
-eval "$(opam env)"
 
 # Remove pcre dynamically linked to force MacOS to use static
 # This needs to be done before make setup since it is used there
