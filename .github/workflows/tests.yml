@@ -39,8 +39,8 @@ jobs:
           path: artifacts.zip
 
   build-wheels-m1:
-    runs-on: macos-12
-    needs: [self-hosted, macOS, ARM64]
+    runs-on: [self-hosted, macOS, ARM64]
+    needs: [build-core-m1]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
