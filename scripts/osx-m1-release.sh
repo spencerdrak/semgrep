@@ -12,7 +12,7 @@ set -eux
 # everything every time
 brew install opam pkg-config coreutils pcre gettext
 brew update # Needed to sidestep bintray brownout
-
+opam init --no-setup --bare;
 #coupling: this should be the same version than in our Dockerfile
 if opam switch 4.14.0 ; then
     echo "Switch 4.14.0 exists, continuing"
