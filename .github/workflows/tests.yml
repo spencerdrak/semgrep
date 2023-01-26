@@ -83,20 +83,18 @@ jobs:
         run: echo '1 == 1' | semgrep -l python -e '$X == $X' -
       - name: e2e spacegrep test
         run: echo '1 == 1' | semgrep -l generic -e '$X == $X' -
-      - name: find semgrep-core
-        run: semgrep --debug --config auto
-      # - name: test dynamically linked libraries are in /usr/lib/
-      #   shell: bash {0}
-      #   run: |
-      #     otool -L /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/semgrep/bin/semgrep-core > otool.txt
-      #     if [ $? -ne 0 ]; then
-      #       echo "Failed to list dynamically linked libraries.";
-      #       cat otool.txt;
-      #       exit 1;
-      #     fi
-      #     NON_USR_LIB_DYNAMIC_LIBRARIES=$(cat otool.txt | tail -n +2 | grep -v "^\s*/usr/lib/")
-      #     if [ $? -eq 0 ]; then
-      #       echo "Error: semgrep-core has been dynamically linked against libraries outside /usr/lib:"
-      #       echo $NON_USR_LIB_DYNAMIC_LIBRARIES
-      #       exit 1;
-      #     fi;
+      - name: test dynamically linked libraries are in /usr/lib/
+        shell: bash {0}
+        run: |
+          otool -L /opt/homebrew/lib/python3.10/site-packages/semgrep/bin/semgrep-core  > otool.txt
+          if [ $? -ne 0 ]; then
+            echo "Failed to list dynamically linked libraries.";
+            cat otool.txt;
+            exit 1;
+          fi
+          NON_USR_LIB_DYNAMIC_LIBRARIES=$(cat otool.txt | tail -n +2 | grep -v "^\s*/usr/lib/")
+          if [ $? -eq 0 ]; then
+            echo "Error: semgrep-core has been dynamically linked against libraries outside /usr/lib:"
+            echo $NON_USR_LIB_DYNAMIC_LIBRARIES
+            exit 1;
+          fi;
