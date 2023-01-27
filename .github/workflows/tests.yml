@@ -100,3 +100,5 @@ jobs:
             echo $NON_USR_LIB_DYNAMIC_LIBRARIES
             exit 1;
           fi;
+      - name: cleanup semgrep
+        run: pip3 uninstall -y semgrep
