@@ -18,6 +18,7 @@ on:
       - "**.md"
 
 jobs:
+  # TODO(devops): extract this into a reusable workflow to be shared with release.yml
   build-core-m1:
     name: Build the OSX M1 binaries
     runs-on: [self-hosted, macOS, ARM64]
@@ -38,6 +39,7 @@ jobs:
           name: semgrep-m1-${{ github.sha }}
           path: artifacts.zip
 
+  # TODO(devops): extract this into a reusable workflow
   build-wheels-m1:
     runs-on: [self-hosted, macOS, ARM64]
     needs: [build-core-m1]
