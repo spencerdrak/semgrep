@@ -66,7 +66,7 @@ jobs:
   # TODO(devops): extract this into a reusable workflow
   test-wheels-m1:
     runs-on: [self-hosted, macOS, ARM64]
-    # needs: [build-wheels-m1]
+    needs: [build-wheels-m1]
     steps:
       - uses: actions/download-artifact@v1
         with:
