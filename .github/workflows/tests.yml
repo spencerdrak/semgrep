@@ -71,7 +71,7 @@ jobs:
     needs: [build-wheels-m1]
     steps:
       - name: cleanup semgrep
-        run: pip3 uninstall semgrep
+        run: pip3 uninstall -y semgrep
       - uses: actions/download-artifact@v1
         with:
           name: m1-wheel
