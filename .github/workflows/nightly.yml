@@ -37,6 +37,10 @@ jobs:
         env:
           HOMEBREW_NO_INSTALL_FROM_API: 1
         run: brew test semgrep --HEAD
+      - name: Brew Audit
+        env:
+          HOMEBREW_NO_INSTALL_FROM_API: 1
+        run: brew audit --strict --online semgrep
       - name: Clean up semgrep installation
         run: brew uninstall semgrep
 
