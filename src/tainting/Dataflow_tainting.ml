@@ -203,6 +203,7 @@ type env = {
   options : Config_semgrep.t; (* rule options *)
   config : config;
   fun_name : var option;
+  enter_env : Lval_env.t;
   lval_env : Lval_env.t;
   top_sinks : Top_sinks.t;
 }
@@ -1153,7 +1154,7 @@ let transfer :
   let node = flow.graph#nodes#assoc ni in
   let out' : Lval_env.t =
     let env =
-      { lang; options; config; fun_name = opt_name; lval_env = in'; top_sinks }
+      { lang; options; config; fun_name = opt_name; enter_env; lval_env = in'; top_sinks }
     in
     match node.F.n with
     | NInstr x ->
