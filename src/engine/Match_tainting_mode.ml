@@ -573,6 +573,7 @@ let pm_of_finding finding =
   | T.SrcToReturn _
   (* TODO: We might want to report functions that let input taint
    * go into a sink (?) *)
+  | T.ArgToArg _
   | T.ArgToSink _
   | T.ArgToReturn _ ->
       None

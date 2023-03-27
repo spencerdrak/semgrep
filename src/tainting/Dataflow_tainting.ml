@@ -1012,6 +1012,9 @@ let check_function_signature env fun_exp args args_taints =
                         findings_of_tainted_sink env (Taints.singleton t) sink
                         |> report_findings env);
                  None
+             | T.ArgToArg _ -> 
+                logger#flash "TODO";
+                None
              (* THINK: Should we report something here? *)
              | T.SrcToSink _ -> None)
         |> List.fold_left Taints.union Taints.empty)
@@ -1119,6 +1122,25 @@ let check_tainted_return env tok e : Taints.t * Lval_env.t =
   report_findings env findings;
   (taints, var_env')
 
+let findings_of_assign env lval taints : T.finding list =
+  logger#flash "findings_of_assign %s" (Display_IL.string_of_lval lval);
+  match Lval_env.dumb_find env.enter_env lval with
+  | `Clean | `None -> []
+  | `Tainted enter_taints ->
+      let arglval_list = 
+        enter_taints |> Taints.elements |> List.filter_map (fun taint ->
+          match taint.T.orig with
+          | T.Arg arglval -> Some arglval
+          | _ -> None
+          )
+        in
+      let new_taints = Taints.diff taints enter_taints in
+      new_taints |> Taints.elements |> List.filter_map (fun taint ->
+        match taint.T.orig, arglval_list with
+        | T.Arg t, [argpos] -> Some (T.ArgToArg (t, taint.tokens, argpos))
+        | _ -> None
+      )
+
 (*****************************************************************************)
 (* Transfer *)
 (*****************************************************************************)
@@ -1178,10 +1200,11 @@ let transfer :
           let has_taints = not (Taints.is_empty taints) in
           match opt_lval with
           | Some lval ->
-              if has_taints then
+              if has_taints then (
+                findings_of_assign env lval taints |> report_findings env;
                 (* Instruction returns tainted data, add taints to lval.
                  * See [Taint_lval_env] for details. *)
-                Lval_env.add lval_env' lval taints
+                Lval_env.add lval_env' lval taints)
               else
                 (* Instruction returns safe data, remove taints from lval.
                  * See [Taint_lval_env] for details. *)
