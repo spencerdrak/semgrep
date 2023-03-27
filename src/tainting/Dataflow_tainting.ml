@@ -945,6 +945,30 @@ and check_tainted_expr env exp : Taints.t * Lval_env.t =
 let check_tainted_var env (var : IL.name) : Taints.t * Lval_env.t =
   check_tainted_lval env (LV.lval_of_var var)
 
+let lval_of_arg_lval fun_exp _fparams (sig_arg : T.arg) =
+  match sig_arg.pos with
+  | ("<this>", -1) ->
+      (match fun_exp with
+      | ( {
+            e =
+              Fetch
+                ({
+                  base = Var _obj;
+                  rev_offset = [ ({ o = Dot _m; _ }) ];
+                } as _lval);
+            _;
+          }) -> 
+          (match sig_arg.offset with
+          (* TODO: more than one offset? *)
+          | [o] ->
+            let arg_lval = { base = Var _obj; rev_offset = [{o = Dot o; oorig = NoOrig}]} in
+            Some (arg_lval, _obj)
+          | [] | _::_ -> None
+          )
+      | _no_method_call -> None
+      )
+  | _ -> None (* TODO for other args *)
+
 (* What is the taint denoted by 'sig_arg' ? *)
 let taints_of_sig_arg env fparams fun_exp args_exps args_taints (sig_arg : T.arg) =
   match sig_arg.offset with
