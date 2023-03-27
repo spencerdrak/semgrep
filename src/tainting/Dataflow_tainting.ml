@@ -946,24 +946,44 @@ let check_tainted_var env (var : IL.name) : Taints.t * Lval_env.t =
   check_tainted_lval env (LV.lval_of_var var)
 
 (* What is the taint denoted by 'sig_arg' ? *)
-let taints_of_sig_arg env fparams args_exps args_taints (sig_arg : T.arg) =
+let taints_of_sig_arg env fparams fun_exp args_exps args_taints (sig_arg : T.arg) =
   match sig_arg.offset with
+  | [] when snd sig_arg.pos < 0 ->
+      logger#error "Impossible?";
+      None
   | [] -> find_pos_in_actual_args args_taints fparams sig_arg.pos
   | xs -> (
+      let* arg_lval =
+        match sig_arg.pos with
+        | ("<this>", -1) -> (
+            (match fun_exp with
+            | ( {
+                  e =
+                    Fetch
+                      ({
+                        base = Var obj;
+                        rev_offset = [ ({ o = Dot _m; _ }) ];
+                      });
+                  _;
+                }) -> Some { base = Var obj; rev_offset = []}
+            | __no_method_call__ -> None )
+        )
+        | pos ->
+          (let* arg_exp = find_pos_in_actual_args args_exps fparams pos in
+          match arg_exp.e with
+          | Fetch arg_lval -> Some arg_lval
+          | __else__ -> None)
+      in
       (* We want to know what's the taint carried by 'arg_exp.x1. ... .xN'. *)
-      let* arg_exp = find_pos_in_actual_args args_exps fparams sig_arg.pos in
-      match arg_exp.e with
-      | Fetch arg_lval ->
-          let os = xs |> Common.map (fun x -> { o = Dot x; oorig = NoOrig }) in
-          let lval =
-            {
-              arg_lval with
-              rev_offset = List.rev_append os arg_lval.rev_offset;
-            }
-          in
-          let arg_taints = check_tainted_lval env lval |> fst in
-          Some arg_taints
-      | __else__ -> None)
+        let os = xs |> Common.map (fun x -> { o = Dot x; oorig = NoOrig }) in
+        let lval =
+          {
+            arg_lval with
+            rev_offset = List.rev_append os arg_lval.rev_offset;
+          }
+        in
+        let arg_taints = check_tainted_lval env lval |> fst in
+        Some arg_taints)
 
 let check_function_signature env fun_exp args args_taints =
   match (!hook_function_taint_signature, fun_exp) with
@@ -979,7 +999,7 @@ let check_function_signature env fun_exp args args_taints =
                       { orig = Src { src with call_trace }; tokens = [] })
              | T.ArgToReturn (arg, tokens, _return_tok) ->
                  let* arg_taints =
-                   taints_of_sig_arg env fparams args args_taints arg
+                   taints_of_sig_arg env fparams fun_exp args args_taints arg
                  in
                  (* Get the token of the function *)
                  let* ident =
@@ -1005,7 +1025,7 @@ let check_function_signature env fun_exp args args_taints =
              | T.ArgToSink (arg, tokens, sink) ->
                  let sink = T.Call (eorig, tokens, sink) in
                  let* arg_taints =
-                   taints_of_sig_arg env fparams args args_taints arg
+                   taints_of_sig_arg env fparams fun_exp args args_taints arg
                  in
                  arg_taints
                  |> Taints.iter (fun t ->
