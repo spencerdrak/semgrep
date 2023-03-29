@@ -30,6 +30,8 @@ jobs:
         run: brew uninstall --force semgrep
       - name: Cleanup semgrep
         run: brew cleanup --prune=all semgrep
+      - name: Cleanup Opam
+        run: opam clean
         # When GHA cancels, locks can be leftover.
       - name: Cleanup Locks
         run: |

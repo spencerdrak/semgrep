@@ -25,6 +25,8 @@ git submodule update --init --recursive --depth 1
 
 eval "$(opam env)"
 
+opam clean
+
 # Needed so we don't make config w/ sudo
 export HOMEBREW_SYSTEM=1
 
